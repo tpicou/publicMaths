@@ -17,6 +17,39 @@ private theorem step {n : ℕ} (hn : 0 < n) :
     a (n+1) = a n + Nat.nthRoot 3 (a n) := by
   cases n <;> first | rfl | omega
 
+/-- mathlib documents, but does not prove, that `Nat.nthRoot 3` is the floor of the
+real cube root. This ties the definition of `a` to the OEIS recurrence. -/
+theorem nthRoot_three_eq_floor (m : ℕ) :
+    Nat.nthRoot 3 m = ⌊(m : ℝ) ^ ((1 : ℝ) / 3)⌋₊ := by
+  set k := Nat.nthRoot 3 m
+  have hlo : k^3 ≤ m := Nat.pow_nthRoot_le (.inl (by decide))
+  have hhi : m < (k+1)^3 := Nat.lt_pow_nthRoot_add_one (by decide) m
+  have key (x : ℝ) (hx : 0 ≤ x) : (x^3) ^ ((1 : ℝ) / 3) = x := by
+    rw [← Real.rpow_natCast, ← Real.rpow_mul hx]; norm_num
+  symm
+  rw [Nat.floor_eq_iff (by positivity)]
+  constructor
+  · calc (k : ℝ) = ((k : ℝ)^3) ^ ((1 : ℝ) / 3) := (key _ (by positivity)).symm
+      _ ≤ (m : ℝ) ^ ((1 : ℝ) / 3) :=
+        Real.rpow_le_rpow (by positivity) (by exact_mod_cast hlo) (by norm_num)
+  · calc (m : ℝ) ^ ((1 : ℝ) / 3) < (((k : ℝ) + 1)^3) ^ ((1 : ℝ) / 3) :=
+          Real.rpow_lt_rpow (by positivity) (by exact_mod_cast hhi) (by norm_num)
+      _ = k + 1 := key _ (by positivity)
+
+/-- The initial value of A113768. -/
+theorem a_one : a 1 = 1 := rfl
+
+/-- The defining recurrence of A113768, stated with the real cube root. -/
+theorem a_succ {n : ℕ} (hn : 0 < n) :
+    a (n+1) = a n + ⌊(a n : ℝ) ^ ((1 : ℝ) / 3)⌋₊ := by
+  rw [step hn, nthRoot_three_eq_floor]
+
+/-- The first 29 terms agree with the OEIS data, checked by the kernel. -/
+example : (List.range 29).map (fun i => a (i+1)) =
+    [1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28,
+     31, 34, 37, 40, 43, 46, 49, 52, 55, 58, 61] := by
+  decide +kernel
+
 private theorem self_le (n : ℕ) : n ≤ a n := by
   induction n with
   | zero => decide
@@ -132,6 +165,19 @@ theorem entry_value {k : ℕ} (hk : 0 < k) : a (entry k) = k^3 + offset k := by
 
 theorem block_value {k : ℕ} (hk : 0 < k) (j : ℕ) (hj : j ≤ width k) :
     a (entry k + j) = k^3 + offset k + j*k := walk hk (entry_value hk) j hj
+
+/-- The integer cube root of `a n` is `k` exactly on the index block `[entry k, entry (k+1))`. -/
+theorem cbrt_on_block {k n : ℕ} (hk : 0 < k) (h₁ : entry k ≤ n) (h₂ : n < entry (k+1)) :
+    Nat.nthRoot 3 (a n) = k := by
+  obtain ⟨j, rfl⟩ := Nat.exists_eq_add_of_le h₁
+  rw [entry_succ hk] at h₂
+  have hj : j + 1 ≤ width k := by omega
+  rw [block_value hk j (by omega)]
+  apply Nat.nthRoot_eq_of_le_of_lt (Nat.le_add_right_of_le (Nat.le_add_right _ _))
+  have hmul := Nat.mul_le_mul_right k hj
+  have hb := boundary hk
+  have hbetter := next_offset_lt hk
+  nlinarith
 
 theorem entry_formula {k : ℕ} (hk : 0 < k) :
     2 * entry k + 4 = 3*k^2 + 3*k + 2*Nat.clog 2 k := by
