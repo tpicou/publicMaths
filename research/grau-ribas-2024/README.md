@@ -1,73 +1,105 @@
-# Grau Ribas's cube-root conjecture (OEIS A113768)
+# Grau Ribas's conjecture for OEIS A113768 — proved and verified in Lean
 
-José María Grau Ribas proposed the asymptotic formula in the OEIS entry on February 13, 2024. The recurrence itself was contributed by Jonathan Vos Post in 2006. The argument below also identifies every perfect cube in the sequence. Historical priority for the proof and the additional result is unverified. [OEIS A113768](https://oeis.org/A113768)
-
-## Statements
-
-Let $a_1=1$ and $a_{n+1}=a_n+\lfloor\sqrt[3]{a_n}\rfloor$ for $n\ge1$. Then
+The sequence [A113768](https://oeis.org/A113768) is defined by
 
 $$
-\lim_{n\to\infty}\frac{a_n}{(2n/3)\sqrt{2n/3}}=1.
+a_1=1,\qquad a_{n+1}=a_n+\left\lfloor\sqrt[3]{a_n}\right\rfloor \quad (n\ge1),
 $$
 
-The set of perfect cubes among the sequence values is exactly $\{8^j:j\ge0\}$. Both statements concern the infinite sequence.
+and begins $1, 2, 3, 4, 5, 6, 7, 8, 10, 12, \dots, 28, 31, 34, \dots$
+On February 13, 2024, José María Grau Ribas conjectured in the OEIS entry that $a_n \sim (2n/3)^{3/2}$.
+This folder contains a complete proof of that conjecture, three further results, and a machine-checked Lean 4 verification of all of them.
 
-The block structure below also gives a rate and a sharper expansion, both with explicit constants valid for every $n\ge1$:
+**Start here: [proof.pdf](proof.pdf)** (5 pages, with full proofs).
+
+## In this folder
+
+| File | What it is |
+| --- | --- |
+| [proof.pdf](proof.pdf) | The write-up: statements, complete proofs, and how they map to the Lean code. |
+| [proof.tex](proof.tex) | LaTeX source of the PDF. |
+| `README.md` | This overview. |
+
+Lean can only build files inside the repository's `Maths/` library, so the formal proofs live there:
+
+| Lean file | What it is |
+| --- | --- |
+| [Maths/GrauRibas/Spec.lean](../../Maths/GrauRibas/Spec.lean) | **The statements to read.** The headline theorems for any sequence satisfying the OEIS recurrence. |
+| [Maths/GrauRibas/CubeRoot.lean](../../Maths/GrauRibas/CubeRoot.lean) | The proofs. |
+| [Maths.lean](../../Maths.lean) | Build entry point and axiom audit. |
+
+## Results
+
+**1. Grau Ribas's conjecture, with a rate.**
 
 $$
-\left|\frac{a_n}{(2n/3)^{3/2}}-1\right|\le\frac{1800}{\sqrt n},\qquad
-\left|a_n-\left(\left(\frac{2n}{3}\right)^{3/2}-n-\frac12\sqrt{\frac{2n}{3}}\,\log_2 n\right)\right|\le 320\sqrt n .
+\lim_{n\to\infty}\frac{a_n}{(2n/3)^{3/2}}=1,
+\qquad\text{and}\qquad
+\left|\frac{a_n}{(2n/3)^{3/2}}-1\right|\le\frac{1800}{\sqrt n}\quad\text{for every } n\ge1.
 $$
 
-All four results are verified in Lean (below).
-
-A complete write-up with all proofs is in [proof.pdf](proof.pdf) (source: [proof.tex](proof.tex)).
-
-## Proof outline
-
-Let $N_k$ be the first index for which $a_{N_k}\ge k^3$, and write $a_{N_k}=k^3+r_k$. The sequence grows by at least one and a step across the preceding cube boundary overshoots by less than $k$, so every positive block is reached. Within $[k^3,(k+1)^3)$ every step has size $k$. The width in value is $3k^2+3k+1$. Thus $r_{k+1}$ is the least nonnegative residue of $r_k-1$ modulo $k$.
-
-When $r_k>0$ the overshoot decreases by one. When $r_k=0$ it resets to $k-1$ at the next block and reaches zero again at $2k$. Since $r_1=0$, the zero overshoots occur precisely at powers of two. Equivalently, $r_k=2^{\lceil\log_2 k\rceil}-k$. An exact cube can occur only as the first value of its block. This proves the powers-of-eight result.
-
-The number of steps to the next block is $3k+3$ plus one precisely when $r_k=0$. Summing from block 1 to block $k-1$ gives
+**2. Second-order expansion.** For every $n\ge1$,
 
 $$
-N_k=1+\frac{3(k-1)(k+2)}2+\lceil\log_2 k\rceil.
+\left|\,a_n-\left(\left(\frac{2n}{3}\right)^{3/2}-n-\frac12\sqrt{\frac{2n}{3}}\,\log_2 n\right)\right|\le 320\sqrt n .
 $$
 
-Every value in the block is $a_{N_k+j}=k^3+r_k+jk$ for $0\le j<N_{k+1}-N_k$. In particular, if $N_k\le n<N_{k+1}$ then $n\sim3k^2/2$ and $a_n\sim k^3$. Combining the two gives the conjectured limit.
+**3. Cubes.** The perfect cubes in the sequence are exactly the powers of $8$.
+
+**4. Exact structure.** On the range $[k^3,(k+1)^3)$ the sequence is an arithmetic progression with step $k$. It starts at $k^3+2^{\lceil\log_2 k\rceil}-k$, at the index
+
+$$
+N_k=1+\frac{3(k-1)(k+2)}{2}+\lceil\log_2 k\rceil .
+$$
+
+The constants $1800$ and $320$ come from the formal proof and are far from optimal. Numerically, the error in result 2 stays between $2.7\sqrt n$ and $3.2\sqrt n$ for $10^3\le n\le10^8$.
+
+## The idea in brief
+
+Let $N_k$ be the first index with $a_{N_k}\ge k^3$, and let $r_k=a_{N_k}-k^3$ be the overshoot.
+While $a_n\in[k^3,(k+1)^3)$, every step adds exactly $k$, so $r_{k+1}\equiv r_k-1 \pmod k$.
+The overshoot therefore decreases by one per block until it hits $0$. It then resets to $k-1$, and this happens exactly when $k$ is a power of two.
+This gives $r_k=2^{\lceil\log_2 k\rceil}-k$ and the formula for $N_k$ above.
+All four results follow, because $n\approx\tfrac32k^2$ and $a_n\approx k^3$ on block $k$.
+A cube $k^3$ can only appear as the first term of its block, which requires $r_k=0$.
 
 ## Lean verification
 
-[CubeRoot.lean](../../Maths/GrauRibas/CubeRoot.lean) defines the one-based recurrence with mathlib's integer cube root `Nat.nthRoot 3`. mathlib documents but does not prove that this is the floor of the real cube root, so the file proves it (`nthRoot_three_eq_floor`) and restates the recurrence with $\lfloor a_n^{1/3}\rfloor$ over the reals (`a_succ`). The auxiliary value at index zero is excluded from the cube-hit theorem. A kernel-checked `decide` confirms the first 29 terms against the OEIS data; all 10,000 terms of the OEIS b-file were also matched numerically. The module is imported by the repository's default build and covered by its axiom audit.
+The headline statements in [Spec.lean](../../Maths/GrauRibas/Spec.lean) are about an **arbitrary** `f : ℕ → ℕ` with `f 1 = 1` and `f (n+1) = f n + ⌊(f n : ℝ) ^ (1/3 : ℝ)⌋₊` for `n ≥ 1`.
+That hypothesis is the OEIS definition word for word, with the real cube root.
+The statements use none of the development's own definitions.
+To trust them you only need to read that file and mathlib's definitions of floor, real powers, `Real.sqrt`, `Real.logb` and `Tendsto`.
 
-### Headline statements
-
-[Spec.lean](../../Maths/GrauRibas/Spec.lean) restates the results for an **arbitrary** `f : ℕ → ℕ` with `f 1 = 1` and `f (n+1) = f n + ⌊(f n : ℝ) ^ (1/3 : ℝ)⌋₊` for `n ≥ 1`. These statements use none of the development's own definitions, so checking them means reading only mathlib's floor, real power, square root, `logb` and `Tendsto`.
-
-| Declaration in `Maths.GrauRibas.Spec` | Statement |
+| `Maths.GrauRibas.Spec` | Statement |
 | --- | --- |
-| `grau_ribas_conjecture` | $f(n)/\bigl((2n/3)\sqrt{2n/3}\bigr)\to1$. |
-| `rate` | $\lvert f(n)/((2n/3)\sqrt{2n/3})-1\rvert\le1800/\sqrt n$ for $n\ge1$. |
-| `second_order` | $\lvert f(n)-((2n/3)\sqrt{2n/3}-n-\tfrac12\sqrt{2n/3}\log_2 n)\rvert\le320\sqrt n$ for $n\ge1$. |
-| `cubes` | $m$ is a cube and a term $f(n)$, $n\ge1$, iff $m=8^j$. |
-| `exists_solution` | The hypotheses are satisfiable, so the statements are not vacuous. |
+| `grau_ribas_conjecture` | $f(n)/\bigl((2n/3)\sqrt{2n/3}\bigr)\to1$ |
+| `rate` | $\lvert f(n)/((2n/3)\sqrt{2n/3})-1\rvert\le1800/\sqrt n$ for $n\ge1$ |
+| `second_order` | $\lvert f(n)-((2n/3)\sqrt{2n/3}-n-\tfrac12\sqrt{2n/3}\log_2 n)\rvert\le320\sqrt n$ for $n\ge1$ |
+| `cubes` | $m$ is a cube and some $f(n)$ with $n\ge1$ $\iff$ $m=8^j$ |
+| `exists_solution` | Such an $f$ exists, so the statements are not vacuous |
 
-### Supporting declarations
+<details>
+<summary>Supporting declarations in <code>Maths.GrauRibas</code></summary>
 
-| Declaration in `Maths.GrauRibas` | Statement |
+| Declaration | Statement |
 | --- | --- |
-| `a_one`, `a_succ`, `nthRoot_three_eq_floor` | The recurrence, with the real cube root, exactly as in OEIS. |
-| `grauRibas_asymptotic` | The ratio above tends to one over the real numbers. |
-| `ratio_bound`, `second_order_bound` | The two explicit bounds above. |
-| `cubes_are_powers_of_eight` | A natural number is both a cube and a sequence value at a positive index if and only if it is a power of eight. |
-| `entry_formula`, `entry_value`, `previous_lt` | The exact index $N_k$, the value there, and the strict inequality one index earlier. |
-| `block_value` | The arithmetic progression in each block, including the step into the next block. |
-| `cbrt_on_block` | The cube root of $a_n$ equals $k$ exactly on the index block $[N_k, N_{k+1})$. |
+| `a_one`, `a_succ`, `nthRoot_three_eq_floor` | The concrete sequence `a` satisfies the OEIS recurrence. This includes a proof that mathlib's `Nat.nthRoot 3` is the floor of the real cube root, which mathlib documents but does not prove. |
+| `entry_value`, `block_value` | The arithmetic progression on each block. |
+| `cbrt_on_block`, `previous_lt` | The cube root of $a_n$ is $k$ exactly on $[N_k,N_{k+1})$. |
+| `entry_formula` | The closed form of $N_k$. |
+| `cubes_are_powers_of_eight` | Result 3. |
+| `grauRibas_asymptotic`, `ratio_bound`, `second_order_bound` | Results 1 and 2. |
 
-From the repository root, run:
+A kernel-checked `decide` also confirms the first 29 terms against the OEIS data.
+</details>
+
+### Reproduce
+
+You need [elan](https://github.com/leanprover/elan); it installs the pinned Lean 4.34.1 automatically.
 
 ```sh
+git clone https://github.com/tpicou/publicMaths
+cd publicMaths
 lake exe cache get
 lake build
 lake env leanchecker --fresh Maths
@@ -76,6 +108,11 @@ lake env leanchecker --fresh Maths
 ### Audit (2026-11-26)
 
 - Builds with the pinned Lean 4.34.1 and mathlib revision, with no warnings.
-- No `sorry`, `admit`, `native_decide`, `axiom`, `unsafe`, `implemented_by`, `opaque`, custom syntax or `set_option` in the project; the default heartbeat limit is kept and `autoImplicit` is off.
-- Every theorem listed in [Maths.lean](../../Maths.lean) depends only on `propext`, `Classical.choice` and `Quot.sound`; the 29-term check depends on no axioms.
-- `leanchecker --fresh` replays the whole development and every mathlib declaration it uses in the kernel.
+- The project contains no `sorry`, `admit`, `native_decide`, `axiom`, `unsafe`, `implemented_by`, `opaque`, custom syntax or `set_option`. The default heartbeat limit is kept, and `autoImplicit` is off.
+- Every theorem listed in [Maths.lean](../../Maths.lean) depends only on Lean's standard axioms `propext`, `Classical.choice` and `Quot.sound`. The 29-term check depends on no axioms.
+- `leanchecker --fresh` re-checks the whole development, and every mathlib declaration it uses, in Lean's kernel.
+- Numerically, the recurrence reproduces all 10,000 terms of the OEIS b-file. The formulas for $N_k$ and $a_{N_k}$ agree on all 1,412 complete blocks in the first $3\times10^6$ terms.
+
+## History
+
+The sequence was contributed to the OEIS by Jonathan Vos Post (January 19, 2006). The conjecture was added by José María Grau Ribas (February 13, 2024). The OEIS entry records no proof. We have not checked the wider literature, so priority for the proof is unverified.
