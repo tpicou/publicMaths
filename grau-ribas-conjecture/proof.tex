@@ -19,7 +19,7 @@
 \title[Grau Ribas's conjecture for A113768]{The cube-root recurrence OEIS A113768:\\ a proof of Grau Ribas's asymptotic conjecture}
 \date{November 2026}
 \thanks{The Lean development, this note and its \LaTeX{} source are public at
-\url{https://github.com/tpicou/publicMaths}; see the folder \href{https://github.com/tpicou/publicMaths/tree/main/research/grau-ribas-2024}{\texttt{research/grau-ribas-2024}}.}
+\url{https://github.com/tpicou/publicMaths}; everything for this note is in the folder \href{https://github.com/tpicou/publicMaths/tree/main/grau-ribas-conjecture}{\texttt{grau-ribas-conjecture}}.}
 
 \begin{document}
 
@@ -254,9 +254,11 @@ $n=10^6$.
 
 \section{Formal verification}\label{sec:lean}
 
-The Lean development is publicly available in the repository \url{https://github.com/tpicou/publicMaths}; all file
-names below are relative to it and link to the files there. The file
-\href{https://github.com/tpicou/publicMaths/blob/main/Maths/GrauRibas/CubeRoot.lean}{\texttt{Maths/GrauRibas/CubeRoot.lean}} formalises the sequence with
+The Lean development is publicly available in the folder
+\href{https://github.com/tpicou/publicMaths/tree/main/grau-ribas-conjecture}{\texttt{grau-ribas-conjecture}}
+of the repository \url{https://github.com/tpicou/publicMaths}, a self-contained Lean project
+alongside this note. All file names below are relative to that folder and link to the files there. The file
+\href{https://github.com/tpicou/publicMaths/blob/main/grau-ribas-conjecture/GrauRibas/CubeRoot.lean}{\texttt{GrauRibas/CubeRoot.lean}} formalises the sequence with
 mathlib's integer cube root \lean{Nat.nthRoot 3}, and proves that it coincides with
 $\lfloor m^{1/3}\rfloor$ computed in $\mathbb R$, so the Lean recurrence is literally the OEIS one.
 The correspondence with this note is:
@@ -265,7 +267,7 @@ The correspondence with this note is:
 \begin{center}
 \begin{tabular}{ll}
 \toprule
-Lean declaration (namespace \lean{Maths.GrauRibas}) & Content\\
+Lean declaration (namespace \lean{GrauRibas}) & Content\\
 \midrule
 \lean{a\_one}, \lean{a\_succ}, \lean{nthRoot\_three\_eq\_floor} & the recurrence with the real cube root\\
 \lean{entry\_value}, \lean{block\_value} & Proposition~\ref{prop:blocks}\\
@@ -282,7 +284,7 @@ Lean declaration (namespace \lean{Maths.GrauRibas}) & Content\\
 
 \smallskip
 {\sloppy
-\noindent\textbf{Trusted statements.} The file \href{https://github.com/tpicou/publicMaths/blob/main/Maths/GrauRibas/Spec.lean}{\texttt{Maths/GrauRibas/Spec.lean}} restates
+\noindent\textbf{Trusted statements.} The file \href{https://github.com/tpicou/publicMaths/blob/main/grau-ribas-conjecture/GrauRibas/Spec.lean}{\texttt{GrauRibas/Spec.lean}} restates
 Theorems~\ref{thm:main}--\ref{thm:second} (\lean{grau\_ribas\_conjecture}, \lean{rate},
 \lean{cubes}, \lean{second\_order}) for an \emph{arbitrary} $f:\mathbb N\to\mathbb N$ with $f(1)=1$
 and $f(n+1)=f(n)+\lfloor f(n)^{1/3}\rfloor$ ($n\ge1$), the cube root taken in $\mathbb R$. These
@@ -295,17 +297,17 @@ only mathlib's definitions of floor, real powers, square root, $\log_2$ and limi
 \lean{native\_decide}, \lean{axiom}, \lean{unsafe}, \lean{implemented\_by}, \lean{opaque} or
 \lean{set\_option} (in particular the default heartbeat limit is kept), and \lean{autoImplicit}
 is disabled. The development builds with Lean~4.34.1 against the mathlib revision pinned in
-\href{https://github.com/tpicou/publicMaths/blob/main/lake-manifest.json}{\texttt{lake-manifest.json}}; all listed theorems depend only on the standard axioms
+\href{https://github.com/tpicou/publicMaths/blob/main/grau-ribas-conjecture/lake-manifest.json}{\texttt{lake-manifest.json}}; all listed theorems depend only on the standard axioms
 \lean{propext}, \lean{Classical.choice} and \lean{Quot.sound}, and the whole development, together with every mathlib
 declaration it uses, is accepted by an independent replay in the kernel
 (\lean{leanchecker --fresh}). A kernel-checked computation also confirms the first 29 terms
 against the OEIS data. To reproduce:
 \begin{verbatim}
 git clone https://github.com/tpicou/publicMaths
-cd publicMaths
+cd publicMaths/grau-ribas-conjecture
 lake exe cache get
 lake build
-lake env leanchecker --fresh Maths
+lake env leanchecker --fresh GrauRibas
 \end{verbatim}
 
 \section*{Numerical check}

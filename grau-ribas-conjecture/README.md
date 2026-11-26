@@ -14,19 +14,16 @@ This folder contains a complete proof of that conjecture, three further results,
 
 ## In this folder
 
+Everything for this result is here; the folder is a self-contained Lean project.
+
 | File | What it is |
 | --- | --- |
 | [proof.pdf](proof.pdf) | The write-up: statements, complete proofs, and how they map to the Lean code. |
 | [proof.tex](proof.tex) | LaTeX source of the PDF. |
-| `README.md` | This overview. |
-
-Lean can only build files inside the repository's `Maths/` library, so the formal proofs live there:
-
-| Lean file | What it is |
-| --- | --- |
-| [Maths/GrauRibas/Spec.lean](../../Maths/GrauRibas/Spec.lean) | **The statements to read.** The headline theorems for any sequence satisfying the OEIS recurrence. |
-| [Maths/GrauRibas/CubeRoot.lean](../../Maths/GrauRibas/CubeRoot.lean) | The proofs. |
-| [Maths.lean](../../Maths.lean) | Build entry point and axiom audit. |
+| [GrauRibas/Spec.lean](GrauRibas/Spec.lean) | **The Lean statements to read.** The headline theorems for any sequence satisfying the OEIS recurrence. |
+| [GrauRibas/CubeRoot.lean](GrauRibas/CubeRoot.lean) | The Lean proofs. |
+| [GrauRibas.lean](GrauRibas.lean) | Build entry point and axiom audit. |
+| [lakefile.lean](lakefile.lean), [lake-manifest.json](lake-manifest.json), [lean-toolchain](lean-toolchain) | Lean project settings, with Lean and mathlib pinned. |
 
 ## Results
 
@@ -65,12 +62,12 @@ A cube $k^3$ can only appear as the first term of its block, which requires $r_k
 
 ## Lean verification
 
-The headline statements in [Spec.lean](../../Maths/GrauRibas/Spec.lean) are about an **arbitrary** `f : ℕ → ℕ` with `f 1 = 1` and `f (n+1) = f n + ⌊(f n : ℝ) ^ (1/3 : ℝ)⌋₊` for `n ≥ 1`.
+The headline statements in [Spec.lean](GrauRibas/Spec.lean) are about an **arbitrary** `f : ℕ → ℕ` with `f 1 = 1` and `f (n+1) = f n + ⌊(f n : ℝ) ^ (1/3 : ℝ)⌋₊` for `n ≥ 1`.
 That hypothesis is the OEIS definition word for word, with the real cube root.
 The statements use none of the development's own definitions.
 To trust them you only need to read that file and mathlib's definitions of floor, real powers, `Real.sqrt`, `Real.logb` and `Tendsto`.
 
-| `Maths.GrauRibas.Spec` | Statement |
+| `GrauRibas.Spec` | Statement |
 | --- | --- |
 | `grau_ribas_conjecture` | $f(n)/\bigl((2n/3)\sqrt{2n/3}\bigr)\to1$ |
 | `rate` | $\lvert f(n)/((2n/3)\sqrt{2n/3})-1\rvert\le1800/\sqrt n$ for $n\ge1$ |
@@ -79,7 +76,7 @@ To trust them you only need to read that file and mathlib's definitions of floor
 | `exists_solution` | Such an $f$ exists, so the statements are not vacuous |
 
 <details>
-<summary>Supporting declarations in <code>Maths.GrauRibas</code></summary>
+<summary>Supporting declarations in <code>GrauRibas</code></summary>
 
 | Declaration | Statement |
 | --- | --- |
@@ -99,17 +96,17 @@ You need [elan](https://github.com/leanprover/elan); it installs the pinned Lean
 
 ```sh
 git clone https://github.com/tpicou/publicMaths
-cd publicMaths
+cd publicMaths/grau-ribas-conjecture
 lake exe cache get
 lake build
-lake env leanchecker --fresh Maths
+lake env leanchecker --fresh GrauRibas
 ```
 
 ### Audit (2026-11-26)
 
 - Builds with the pinned Lean 4.34.1 and mathlib revision, with no warnings.
 - The project contains no `sorry`, `admit`, `native_decide`, `axiom`, `unsafe`, `implemented_by`, `opaque`, custom syntax or `set_option`. The default heartbeat limit is kept, and `autoImplicit` is off.
-- Every theorem listed in [Maths.lean](../../Maths.lean) depends only on Lean's standard axioms `propext`, `Classical.choice` and `Quot.sound`. The 29-term check depends on no axioms.
+- Every theorem listed in [GrauRibas.lean](GrauRibas.lean) depends only on Lean's standard axioms `propext`, `Classical.choice` and `Quot.sound`. The 29-term check depends on no axioms.
 - `leanchecker --fresh` re-checks the whole development, and every mathlib declaration it uses, in Lean's kernel.
 - Numerically, the recurrence reproduces all 10,000 terms of the OEIS b-file. The formulas for $N_k$ and $a_{N_k}$ agree on all 1,412 complete blocks in the first $3\times10^6$ terms.
 

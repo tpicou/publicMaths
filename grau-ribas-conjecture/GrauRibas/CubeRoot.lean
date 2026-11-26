@@ -6,7 +6,7 @@ import Mathlib.Tactic.Linarith
 import Mathlib.Tactic.Ring
 
 /-! The cube-root recurrence A113768, indexed from 1. -/
-namespace Maths.GrauRibas
+namespace GrauRibas
 
 /-- The auxiliary value at zero is outside the OEIS sequence. -/
 def a : ℕ → ℕ
@@ -566,4 +566,4 @@ theorem ratio_bound {n : ℕ} (hn : 0 < n) :
     mul_le_mul h hsq hsqpos.le (by positivity)
   nlinarith
 
-end Maths.GrauRibas
+end GrauRibas

@@ -1,4 +1,4 @@
-import Maths.GrauRibas.CubeRoot
+import GrauRibas.CubeRoot
 
 /-!
 # A113768: headline results, stated without internal definitions
@@ -13,7 +13,7 @@ The value `f 0` is unconstrained. None of the auxiliary definitions of `CubeRoot
 has to trust mathlib's `Nat.floor`, `Real.rpow`, `Real.sqrt`, `Real.logb` and `Tendsto`.
 -/
 
-namespace Maths.GrauRibas.Spec
+namespace GrauRibas.Spec
 
 open Filter Topology
 
@@ -74,4 +74,4 @@ theorem exists_solution : ∃ f : ℕ → ℕ, f 1 = 1 ∧
     ∀ n, 1 ≤ n → f (n + 1) = f n + ⌊(f n : ℝ) ^ ((1 : ℝ) / 3)⌋₊ :=
   ⟨a, a_one, fun _ hn => a_succ hn⟩
 
-end Maths.GrauRibas.Spec
+end GrauRibas.Spec

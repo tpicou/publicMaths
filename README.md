@@ -1,29 +1,27 @@
 # publicMaths
 
-Mathematical results with complete written proofs and machine-checked Lean 4 verifications.
+A collection of mathematical results, each with a complete written proof and, where possible, a machine-checked verification in [Lean 4](https://lean-lang.org/).
 
 ## Projects
 
-| Project | Folder | Status |
-| --- | --- | --- |
-| Grau Ribas's conjecture for the cube-root recurrence [OEIS A113768](https://oeis.org/A113768) | [research/grau-ribas-2024](research/grau-ribas-2024) | Proved and verified in Lean, with explicit rate and second-order expansion ([PDF](research/grau-ribas-2024/proof.pdf)) |
+| Project | Summary |
+| --- | --- |
+| [grau-ribas-conjecture](grau-ribas-conjecture) | Proof of Grau Ribas's conjecture $a_n\sim(2n/3)^{3/2}$ for the cube-root recurrence [OEIS A113768](https://oeis.org/A113768), with an explicit rate, a second-order expansion and the cubes in the sequence. Verified in Lean. |
 
-Each project folder under `research/` has a README and a PDF write-up. The Lean proofs live in the `Maths/` library, because Lean's build tool `lake` builds from there; each project README links to its Lean files.
+## Layout
 
-## Repository layout
+Each project lives in its own folder. A folder holds:
 
-```
-research/<project>/   README, proof.pdf and proof.tex for each project
-Maths/                Lean 4 library (one subfolder per project)
-Maths.lean            build entry point and axiom audit
-lakefile.lean         Lean project file; mathlib is pinned in lake-manifest.json
-```
+- a `README.md` with the results and how to check them;
+- the write-up, as `proof.pdf` with its LaTeX source;
+- if the project is formalised, its own Lean project, with Lean and mathlib pinned for that project. Older projects keep building even as newer ones move to newer versions of mathlib.
 
-## Building the Lean proofs
+To check a formalised project, go into its folder and follow its README, typically:
 
 ```sh
-lake exe cache get   # download prebuilt mathlib
-lake build           # check every proof
+cd <project-folder>
+lake exe cache get
+lake build
 ```
 
 ## License
