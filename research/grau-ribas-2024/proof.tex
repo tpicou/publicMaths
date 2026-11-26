@@ -28,7 +28,8 @@ $N_k=1+\tfrac32(k-1)(k+2)+\lceil\log_2 k\rceil$. Consequences are the conjecture
 J.~M.~Grau Ribas that $a_n\sim(2n/3)^{3/2}$, the fact that the perfect cubes in the sequence
 are exactly the powers of~$8$, and the sharper expansion
 $a_n=(2n/3)^{3/2}-n-\tfrac12\sqrt{2n/3}\,\log_2 n+O(\sqrt n)$.
-Everything except the last expansion has been machine-checked in Lean~4 with mathlib.
+All of these results, the last two with explicit constants, have been machine-checked in
+Lean~4 with mathlib.
 \end{abstract}
 
 \maketitle
@@ -45,7 +46,8 @@ attributed to Jos\'e Mar\'ia Grau Ribas (2024), that $a_n$ grows like $(2n/3)^{3
 
 \begin{theorem}[Grau Ribas's conjecture]\label{thm:main}
 $\displaystyle\lim_{n\to\infty}\frac{a_n}{(2n/3)^{3/2}}=1$. More precisely,
-$a_n/(2n/3)^{3/2}=1+O(n^{-1/2})$.
+$a_n/(2n/3)^{3/2}=1+O(n^{-1/2})$; explicitly,
+$\bigl|a_n/(2n/3)^{3/2}-1\bigr|\le 1800/\sqrt n$ for every $n\ge1$.
 \end{theorem}
 
 \begin{theorem}[Cubes]\label{thm:cubes}
@@ -54,11 +56,14 @@ $m=8^j$ for some $j\ge0$.
 \end{theorem}
 
 \begin{theorem}[Second-order asymptotics]\label{thm:second}
-$\displaystyle a_n=\Bigl(\frac{2n}{3}\Bigr)^{3/2}-n-\frac12\sqrt{\frac{2n}{3}}\,\log_2 n+O(\sqrt n).$
+$\displaystyle a_n=\Bigl(\frac{2n}{3}\Bigr)^{3/2}-n-\frac12\sqrt{\frac{2n}{3}}\,\log_2 n+O(\sqrt n);$
+explicitly, the $O(\sqrt n)$ term is at most $320\sqrt n$ in absolute value for every $n\ge1$.
 \end{theorem}
 
 All three follow from an exact description of the sequence (Proposition~\ref{prop:blocks}
-and Proposition~\ref{prop:entry}).
+and Proposition~\ref{prop:entry}). The constants $1800$ and $320$ are far from optimal; they are
+the ones established in the formal proof (Section~\ref{sec:lean}), which follows the argument
+below but replaces Taylor's theorem by the identity in Remark~\ref{rem:alg}.
 
 \section{Notation and two arithmetic lemmas}
 
@@ -225,6 +230,17 @@ using $k=O(\sqrt n)$,
 \]
 \end{proof}
 
+\begin{remark}\label{rem:alg}
+For a fully explicit (and machine-checkable) version of the Taylor step, put $y=\sqrt x$ and
+$P=k^3+\tfrac32k\,s$ with $s=x-k^2$. Then
+\[
+  (y^3-P)(y^3+P)=x^3-P^2=\tfrac34k^2s^2+s^3,
+\]
+and $-\tfrac13\le s\le5k$, $y^3+P\ge k^3/2$ give $|y^3-P|\le290k$. Likewise $(y-k)(y+k)=s$ gives
+$k-1\le y\le k+3$. The Lean proof combines these polynomial bounds with
+$\log_2k\le\ell(k)<\log_2k+1$ and $k^2\le n\le9k^2$.
+\end{remark}
+
 \begin{remark}
 The $O(\sqrt n)$ term genuinely oscillates: it contains $r_k$ and the fractional part of
 $\log_2k$. Numerically, the remainder divided by $\sqrt n$ stays between about $2.72$ and $3.18$
@@ -233,7 +249,7 @@ Theorem~\ref{thm:main}: $a_n/(2n/3)^{3/2}\approx1-\tfrac32(2n/3)^{-1/2}$, e.g.\ 
 $n=10^6$.
 \end{remark}
 
-\section{Formal verification}
+\section{Formal verification}\label{sec:lean}
 
 The file \texttt{Maths/GrauRibas/CubeRoot.lean} of the repository formalises the sequence with
 mathlib's integer cube root \lean{Nat.nthRoot 3}, and proves that it coincides with
@@ -252,21 +268,37 @@ Lean declaration (namespace \lean{Maths.GrauRibas}) & Content\\
 \lean{entry\_formula} & Proposition~\ref{prop:entry}\\
 \lean{cubes\_are\_powers\_of\_eight} & Theorem~\ref{thm:cubes}\\
 \lean{grauRibas\_asymptotic} & Theorem~\ref{thm:main} (the limit)\\
+\lean{ratio\_bound} & Theorem~\ref{thm:main} (rate, constant $1800$)\\
+\lean{second\_order\_bound} & Theorem~\ref{thm:second} (constant $320$)\\
 \bottomrule
 \end{tabular}
 \end{center}
 \medskip
 
-The rate $O(n^{-1/2})$ in Theorem~\ref{thm:main} and Theorem~\ref{thm:second} are \emph{not}
-formalised. The development builds with Lean~4.34.1 against the mathlib revision pinned in
+\smallskip
+{\sloppy
+\noindent\textbf{Trusted statements.} The file \texttt{Maths/GrauRibas/Spec.lean} restates
+Theorems~\ref{thm:main}--\ref{thm:second} (\lean{grau\_ribas\_conjecture}, \lean{rate},
+\lean{cubes}, \lean{second\_order}) for an \emph{arbitrary} $f:\mathbb N\to\mathbb N$ with $f(1)=1$
+and $f(n+1)=f(n)+\lfloor f(n)^{1/3}\rfloor$ ($n\ge1$), the cube root taken in $\mathbb R$. These
+statements mention no auxiliary definition of the development, so checking them requires reading
+only mathlib's definitions of floor, real powers, square root, $\log_2$ and limits;
+\lean{exists\_solution} shows that the hypotheses are satisfiable.\par}
+
+\smallskip
+\noindent\textbf{Audit.} The project's Lean files contain no \lean{sorry}, \lean{admit},
+\lean{native\_decide}, \lean{axiom}, \lean{unsafe}, \lean{implemented\_by}, \lean{opaque} or
+\lean{set\_option} (in particular the default heartbeat limit is kept), and \lean{autoImplicit}
+is disabled. The development builds with Lean~4.34.1 against the mathlib revision pinned in
 \texttt{lake-manifest.json}; all listed theorems depend only on the standard axioms
-\lean{propext}, \lean{Classical.choice} and \lean{Quot.sound}, and the module passes
-\lean{leanchecker}. A kernel-checked computation also confirms the first 29 terms
+\lean{propext}, \lean{Classical.choice} and \lean{Quot.sound}, and the whole development, together with every mathlib
+declaration it uses, is accepted by an independent replay in the kernel
+(\lean{leanchecker --fresh}). A kernel-checked computation also confirms the first 29 terms
 against the OEIS data. To reproduce:
 \begin{verbatim}
 lake exe cache get
 lake build
-lake env leanchecker Maths.GrauRibas.CubeRoot
+lake env leanchecker --fresh Maths
 \end{verbatim}
 
 \section*{Numerical check}
